@@ -5,123 +5,97 @@ import (
 	"testing"
 )
 
+var adjTests = []struct {
+	g    *Graph
+	adj  map[A]map[B]bool
+	adja map[A][]B
+	adjb map[B][]A
+}{
+	{
+		g: New(),
+	},
+	{
+		g: &Graph{
+			ab: map[A]map[B]struct{}{"apple": map[B]struct{}{"tree": struct{}{}}},
+			ba: map[B]map[A]struct{}{"tree": map[A]struct{}{"apple": struct{}{}}},
+		},
+		adj: map[A]map[B]bool{
+			"apple":     map[B]bool{"tree": true, "rock": false},
+			"spaghetti": map[B]bool{"tree": false},
+		},
+		adja: map[A][]B{"apple": []B{"tree"}},
+		adjb: map[B][]A{"tree": []A{"apple"}},
+	},
+	{
+		g: &Graph{
+			ab: map[A]map[B]struct{}{
+				"X": map[B]struct{}{0: struct{}{}},
+				"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
+				"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			},
+			ba: map[B]map[A]struct{}{
+				0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
+				1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+				2: map[A]struct{}{"Z": struct{}{}},
+				3: map[A]struct{}{"Z": struct{}{}},
+			},
+		},
+		adj: map[A]map[B]bool{
+			"W": map[B]bool{0: false, 1: false, 2: false, 3: false},
+			"X": map[B]bool{0: true, 1: false, 2: false, 3: false},
+			"Y": map[B]bool{0: true, 1: true, 2: false, 3: false},
+			"Z": map[B]bool{0: false, 1: true, 2: true, 3: true},
+		},
+		adja: map[A][]B{"X": []B{0}, "Y": []B{0, 1}, "Z": []B{1, 2, 3}},
+		adjb: map[B][]A{0: []A{"X", "Y"}, 1: []A{"Y", "Z"}, 2: []A{"Z"}, 3: []A{"Z"}},
+	},
+}
+
 func TestN(t *testing.T) {
-	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
-		},
-	}
-	na, nb := 3, 4
-	if n := g.NA(); n != na {
-		t.Errorf("NA(%+v): got %v, want %v", g, n, na)
-	}
-	if n := g.NB(); n != nb {
-		t.Errorf("NB(%+v): got %v, want %v", g, n, nb)
-	}
-}
-
-func TestDeg(t *testing.T) {
-	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
-		},
-	}
-	adja := map[A][]B{"X": []B{0}, "Y": []B{0, 1}, "Z": []B{1, 2, 3}}
-	adjb := map[B][]A{0: []A{"X", "Y"}, 1: []A{"Y", "Z"}, 2: []A{"Z"}, 3: []A{"Z"}}
-	for a, adj := range adja {
-		if _, ok := g.ab[a]; !ok {
-			t.Fatalf("DegA: %+v does not contain %v", g, a)
+	for _, test := range adjTests {
+		if na := test.g.NA(); na != len(test.adja) {
+			t.Errorf("NA(%+v): got %v, want %v", test.g, na, len(test.adja))
 		}
-		if deg := g.DegA(a); deg != len(adj) {
-			t.Errorf("DegA(%+v, %v): got %v, want %v", g, a, deg, len(adj))
-		}
-	}
-	for b, adj := range adjb {
-		if _, ok := g.ba[b]; !ok {
-			t.Fatalf("DegB: %+v does not contain %v", g, b)
-		}
-		if deg := g.DegB(b); deg != len(adj) {
-			t.Errorf("DegB(%+v, %v): got %v, want %v", g, b, deg, len(adj))
+		if nb := test.g.NB(); nb != len(test.adjb) {
+			t.Errorf("NB(%+v): got %v, want %v", test.g, nb, len(test.adjb))
 		}
 	}
 }
 
-func TestAdjTo(t *testing.T) {
-	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
-		},
-	}
-	adja := map[A][]B{"X": []B{0}, "Y": []B{0, 1}, "Z": []B{1, 2, 3}}
-	adjb := map[B][]A{0: []A{"X", "Y"}, 1: []A{"Y", "Z"}, 2: []A{"Z"}, 3: []A{"Z"}}
-	for a, adj := range adja {
-		if _, ok := g.ab[a]; !ok {
-			t.Fatalf("AdjToA: %+v does not contain %v", g, a)
+func TestDegAdjTo(t *testing.T) {
+	for _, test := range adjTests {
+		for a, adj := range test.adja {
+			if _, ok := test.g.ab[a]; !ok {
+				t.Fatalf("DegA: %+v does not contain %v", test.g, a)
+			}
+			if deg := test.g.DegA(a); deg != len(adj) {
+				t.Errorf("DegA(%+v, %v): got %v, want %v", test.g, a, deg, len(adj))
+			}
+			if got := test.g.AdjToA(a); !matchB(got, adj) {
+				t.Errorf("AdjToA(%+v, %v): got %v, want %v", test.g, a, got, adj)
+			}
 		}
-		got := g.AdjToA(a)
-		if !matchB(got, adj) {
-			t.Errorf("AdjToA(%+v, %v): got %v, want %v", g, a, got, adj)
-		}
-	}
-	for b, adj := range adjb {
-		if _, ok := g.ba[b]; !ok {
-			t.Fatalf("AdjToB: %+v does not contain %v", g, b)
-		}
-		got := g.AdjToB(b)
-		if !matchA(got, adj) {
-			t.Errorf("AdjToB(%+v, %v): got %v, want %v", g, b, got, adj)
+		for b, adj := range test.adjb {
+			if _, ok := test.g.ba[b]; !ok {
+				t.Fatalf("DegB: %+v does not contain %v", test.g, b)
+			}
+			if deg := test.g.DegB(b); deg != len(adj) {
+				t.Errorf("DegB(%+v, %v): got %v, want %v", test.g, b, deg, len(adj))
+			}
+			if got := test.g.AdjToB(b); !matchA(got, adj) {
+				t.Errorf("AdjToB(%+v, %v): got %v, want %v", test.g, b, got, adj)
+			}
 		}
 	}
 }
 
 func TestAdjacent(t *testing.T) {
-	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
-		},
-	}
-	adj := map[A]map[B]bool{
-		"W": map[B]bool{0: false, 1: false, 2: false, 3: false},
-		"X": map[B]bool{0: true, 1: false, 2: false, 3: false},
-		"Y": map[B]bool{0: true, 1: true, 2: false, 3: false},
-		"Z": map[B]bool{0: false, 1: true, 2: true, 3: true},
-	}
-	for a := range adj {
-		for b := range adj[a] {
-			if got := g.Adjacent(a, b); got != adj[a][b] {
-				t.Errorf("Adjacent(%+v: %v, %v): got %v, want %v", g, a, b, got, adj[a][b])
+	for _, test := range adjTests {
+		for a := range test.adj {
+			for b := range test.adj[a] {
+				if got := test.g.Adjacent(a, b); got != test.adj[a][b] {
+					t.Errorf("Adjacent(%+v: %v, %v): got %v, want %v", test.g, a, b, got, test.adj[a][b])
+				}
 			}
 		}
 	}
