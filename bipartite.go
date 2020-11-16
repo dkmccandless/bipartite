@@ -1,170 +1,141 @@
 /*
 Package bipartite implements an undirected bipartite graph data structure.
 
-Types A and B define disjoint and independent sets of nodes.
-
-Add connects one node of each type with an edge, creating either node if necessary;
-Delete removes an edge between nodes if one exists, and removes either node from the graph
-if the deleted edge was its last. Nodes can also be removed, and all of their edges deleted,
-with RemoveA and RemoveB.
+Add assigns a pair of nodes to separate sets a and b and connects them, creating either node
+if necessary; Delete removes an edge between nodes if one exists, and removes either node
+from the graph if the deleted edge was its last. Nodes can also be removed, and all of their
+edges deleted, with Remove.
 */
 package bipartite
 
-// A is a node that is only adjacent to B nodes.
-// Values must be comparable using the == and != operators.
-type A interface{}
-
-// B is a node that is only adjacent to A nodes.
-// Values must be comparable using the == and != operators.
-type B interface{}
-
-// Graph is an undirected bipartite graph of A and B nodes.
+// Graph is an undirected bipartite graph.
 type Graph struct {
-	ab map[A]map[B]struct{}
-	ba map[B]map[A]struct{}
+	m      map[interface{}]map[interface{}]struct{}
+	as, bs map[interface{}]struct{}
 }
 
 // New returns an empty Graph ready to use.
 func New() *Graph {
 	return &Graph{
-		ab: make(map[A]map[B]struct{}),
-		ba: make(map[B]map[A]struct{}),
+		m:  make(map[interface{}]map[interface{}]struct{}),
+		as: make(map[interface{}]struct{}),
+		bs: make(map[interface{}]struct{}),
 	}
 }
 
 // Copy returns a pointer to a Graph that is deeply equal to g but shares no memory with it.
 func Copy(g *Graph) *Graph {
 	c := New()
-	for a := range g.ab {
-		c.ab[a] = make(map[B]struct{})
-		for b := range g.ab[a] {
-			c.ab[a][b] = struct{}{}
+	for k0 := range g.m {
+		c.m[k0] = make(map[interface{}]struct{})
+		for k1 := range g.m[k0] {
+			c.m[k0][k1] = struct{}{}
 		}
 	}
-	for b := range g.ba {
-		c.ba[b] = make(map[A]struct{})
-		for a := range g.ba[b] {
-			c.ba[b][a] = struct{}{}
-		}
+	for k := range g.as {
+		c.as[k] = struct{}{}
+	}
+	for k := range g.bs {
+		c.bs[k] = struct{}{}
 	}
 	return c
 }
 
 // Add adds a and b to the graph if not present, and records that they are adjacent.
-func (g *Graph) Add(a A, b B) {
-	if _, ok := g.ab[a]; !ok {
-		g.ab[a] = make(map[B]struct{})
+func (g *Graph) Add(a, b interface{}) {
+	if _, ok := g.as[a]; !ok {
+		g.as[a] = struct{}{}
+		g.m[a] = make(map[interface{}]struct{})
 	}
-	if _, ok := g.ba[b]; !ok {
-		g.ba[b] = make(map[A]struct{})
+	if _, ok := g.bs[b]; !ok {
+		g.bs[b] = struct{}{}
+		g.m[b] = make(map[interface{}]struct{})
 	}
 
-	g.ab[a][b] = struct{}{}
-	g.ba[b][a] = struct{}{}
+	g.m[a][b] = struct{}{}
+	g.m[b][a] = struct{}{}
 }
 
 // Adjacent reports whether a and b are adjacent.
-func (g *Graph) Adjacent(a A, b B) bool {
-	if _, ok := g.ab[a]; !ok {
+func (g *Graph) Adjacent(a, b interface{}) bool {
+	if _, ok := g.as[a]; !ok {
 		return false
 	}
-	_, ok := g.ab[a][b]
+	_, ok := g.m[a][b]
 	return ok
 }
 
-// AdjToA returns an unordered slice of all Bs adjacent to a.
-// If a is not in the graph, AdjToA returns nil.
-func (g *Graph) AdjToA(a A) []B {
-	m, ok := g.ab[a]
+// AdjTo returns an unordered slice of all nodes adjacent to node.
+// If node is not in the graph, AdjTo returns nil.
+func (g *Graph) AdjTo(node interface{}) []interface{} {
+	m, ok := g.m[node]
 	if !ok {
 		return nil
 	}
-	s := make([]B, 0, len(m))
-	for b := range m {
-		s = append(s, b)
-	}
-	return s
-}
-
-// AdjToB returns an unordered slice of all As adjacent to b.
-// If b is not in the graph, AdjToB returns nil.
-func (g *Graph) AdjToB(b B) []A {
-	m, ok := g.ba[b]
-	if !ok {
-		return nil
-	}
-	s := make([]A, 0, len(m))
+	s := make([]interface{}, 0, len(m))
 	for a := range m {
 		s = append(s, a)
 	}
 	return s
 }
 
-// As returns an unordered slice of all As in the graph.
+// As returns an unordered slice of all nodes added by Add into set a.
 // If the graph is empty, As returns nil.
-func (g *Graph) As() []A {
-	if len(g.ab) == 0 {
+func (g *Graph) As() []interface{} {
+	if len(g.as) == 0 {
 		return nil
 	}
-	s := make([]A, 0, len(g.ab))
-	for a := range g.ab {
+	s := make([]interface{}, 0, len(g.as))
+	for a := range g.as {
 		s = append(s, a)
 	}
 	return s
 }
 
-// Bs returns an unordered slice of all Bs in the graph.
+// Bs returns an unordered slice of all nodes added by Add into set b.
 // If the graph is empty, Bs returns nil.
-func (g *Graph) Bs() []B {
-	if len(g.ba) == 0 {
+func (g *Graph) Bs() []interface{} {
+	if len(g.bs) == 0 {
 		return nil
 	}
-	s := make([]B, 0, len(g.ba))
-	for b := range g.ba {
+	s := make([]interface{}, 0, len(g.bs))
+	for b := range g.bs {
 		s = append(s, b)
 	}
 	return s
 }
 
-// DegA returns the number of Bs adjacent to a.
-// It is equivalent to len(g.AdjToA(a)), but faster.
-func (g *Graph) DegA(a A) int { return len(g.ab[a]) }
-
-// DegB returns the number of As adjacent to b.
-// It is equivalent to len(g.AdjToB(b)), but faster.
-func (g *Graph) DegB(b B) int { return len(g.ba[b]) }
+// Deg returns the number of nodes adjacent to node.
+// It is equivalent to len(g.AdjTo(node)), but faster.
+func (g *Graph) Deg(node interface{}) int { return len(g.m[node]) }
 
 // Delete records that a and b are not adjacent.
 // If a node's last edge is deleted, Delete removes it from the graph.
-func (g *Graph) Delete(a A, b B) {
-	delete(g.ab[a], b)
-	if len(g.ab[a]) == 0 {
-		delete(g.ab, a)
+func (g *Graph) Delete(a, b interface{}) {
+	delete(g.m[a], b)
+	if len(g.m[a]) == 0 {
+		delete(g.m, a)
+		delete(g.as, a)
 	}
-	delete(g.ba[b], a)
-	if len(g.ba[b]) == 0 {
-		delete(g.ba, b)
+	delete(g.m[b], a)
+	if len(g.m[b]) == 0 {
+		delete(g.m, b)
+		delete(g.bs, b)
 	}
 }
 
-// NA returns the number of As in the graph.
+// NA returns the number of nodes added by Add into set a.
 // It is equivalent to len(g.As()), but faster.
-func (g *Graph) NA() int { return len(g.ab) }
+func (g *Graph) NA() int { return len(g.as) }
 
-// NB returns the number of Bs in the graph.
+// NB returns the number of nodes added by Add into set b.
 // It is equivalent to len(g.Bs()), but faster.
-func (g *Graph) NB() int { return len(g.ba) }
+func (g *Graph) NB() int { return len(g.bs) }
 
-// RemoveA deletes all of a's edges and removes it from the graph.
-func (g *Graph) RemoveA(a A) {
-	for b := range g.ab[a] {
-		g.Delete(a, b)
-	}
-}
-
-// RemoveB deletes all of b's edges and removes it from the graph.
-func (g *Graph) RemoveB(b B) {
-	for a := range g.ba[b] {
-		g.Delete(a, b)
+// Remove deletes all of node's edges and removes it from the graph.
+func (g *Graph) Remove(node interface{}) {
+	for a := range g.m[node] {
+		g.Delete(node, a)
+		g.Delete(a, node)
 	}
 }

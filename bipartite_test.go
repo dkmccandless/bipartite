@@ -7,47 +7,51 @@ import (
 
 var adjTests = []struct {
 	g    *Graph
-	adj  map[A]map[B]bool
-	adja map[A][]B
-	adjb map[B][]A
+	adj  map[interface{}]map[interface{}]bool
+	adja map[interface{}][]interface{}
+	adjb map[interface{}][]interface{}
 }{
 	{
 		g: New(),
 	},
 	{
 		g: &Graph{
-			ab: map[A]map[B]struct{}{"apple": map[B]struct{}{"tree": struct{}{}}},
-			ba: map[B]map[A]struct{}{"tree": map[A]struct{}{"apple": struct{}{}}},
+			m: map[interface{}]map[interface{}]struct{}{
+				"apple": map[interface{}]struct{}{"tree": struct{}{}},
+				"tree":  map[interface{}]struct{}{"apple": struct{}{}},
+			},
+			as: map[interface{}]struct{}{"apple": struct{}{}},
+			bs: map[interface{}]struct{}{"tree": struct{}{}},
 		},
-		adj: map[A]map[B]bool{
-			"apple":     map[B]bool{"tree": true, "rock": false},
-			"spaghetti": map[B]bool{"tree": false},
+		adj: map[interface{}]map[interface{}]bool{
+			"apple":     map[interface{}]bool{"tree": true, "rock": false},
+			"spaghetti": map[interface{}]bool{"tree": false},
 		},
-		adja: map[A][]B{"apple": []B{"tree"}},
-		adjb: map[B][]A{"tree": []A{"apple"}},
+		adja: map[interface{}][]interface{}{"apple": []interface{}{"tree"}},
+		adjb: map[interface{}][]interface{}{"tree": []interface{}{"apple"}},
 	},
 	{
 		g: &Graph{
-			ab: map[A]map[B]struct{}{
-				"X": map[B]struct{}{0: struct{}{}},
-				"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-				"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			m: map[interface{}]map[interface{}]struct{}{
+				"X": map[interface{}]struct{}{0: struct{}{}},
+				"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
+				"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
+				1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+				2:   map[interface{}]struct{}{"Z": struct{}{}},
+				3:   map[interface{}]struct{}{"Z": struct{}{}},
 			},
-			ba: map[B]map[A]struct{}{
-				0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-				1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				2: map[A]struct{}{"Z": struct{}{}},
-				3: map[A]struct{}{"Z": struct{}{}},
-			},
+			as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
+			bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 		},
-		adj: map[A]map[B]bool{
-			"W": map[B]bool{0: false, 1: false, 2: false, 3: false},
-			"X": map[B]bool{0: true, 1: false, 2: false, 3: false},
-			"Y": map[B]bool{0: true, 1: true, 2: false, 3: false},
-			"Z": map[B]bool{0: false, 1: true, 2: true, 3: true},
+		adj: map[interface{}]map[interface{}]bool{
+			"W": map[interface{}]bool{0: false, 1: false, 2: false, 3: false},
+			"X": map[interface{}]bool{0: true, 1: false, 2: false, 3: false},
+			"Y": map[interface{}]bool{0: true, 1: true, 2: false, 3: false},
+			"Z": map[interface{}]bool{0: false, 1: true, 2: true, 3: true},
 		},
-		adja: map[A][]B{"X": []B{0}, "Y": []B{0, 1}, "Z": []B{1, 2, 3}},
-		adjb: map[B][]A{0: []A{"X", "Y"}, 1: []A{"Y", "Z"}, 2: []A{"Z"}, 3: []A{"Z"}},
+		adja: map[interface{}][]interface{}{"X": []interface{}{0}, "Y": []interface{}{0, 1}, "Z": []interface{}{1, 2, 3}},
+		adjb: map[interface{}][]interface{}{0: []interface{}{"X", "Y"}, 1: []interface{}{"Y", "Z"}, 2: []interface{}{"Z"}, 3: []interface{}{"Z"}},
 	},
 }
 
@@ -64,26 +68,26 @@ func TestN(t *testing.T) {
 
 func TestDegAdjTo(t *testing.T) {
 	for _, test := range adjTests {
-		for a, adj := range test.adja {
-			if _, ok := test.g.ab[a]; !ok {
-				t.Fatalf("DegA: %+v does not contain %v", test.g, a)
+		for node, adj := range test.adja {
+			if _, ok := test.g.m[node]; !ok {
+				t.Fatalf("Deg: %+v does not contain %v", test.g, node)
 			}
-			if deg := test.g.DegA(a); deg != len(adj) {
-				t.Errorf("DegA(%+v, %v): got %v, want %v", test.g, a, deg, len(adj))
+			if deg := test.g.Deg(node); deg != len(adj) {
+				t.Errorf("Deg(%+v, %v): got %v, want %v", test.g, node, deg, len(adj))
 			}
-			if got := test.g.AdjToA(a); !matchB(got, adj) {
-				t.Errorf("AdjToA(%+v, %v): got %v, want %v", test.g, a, got, adj)
+			if got := test.g.AdjTo(node); !match(got, adj) {
+				t.Errorf("AdjTo(%+v, %v): got %v, want %v", test.g, node, got, adj)
 			}
 		}
-		for b, adj := range test.adjb {
-			if _, ok := test.g.ba[b]; !ok {
-				t.Fatalf("DegB: %+v does not contain %v", test.g, b)
+		for node, adj := range test.adjb {
+			if _, ok := test.g.m[node]; !ok {
+				t.Fatalf("Deg: %+v does not contain %v", test.g, node)
 			}
-			if deg := test.g.DegB(b); deg != len(adj) {
-				t.Errorf("DegB(%+v, %v): got %v, want %v", test.g, b, deg, len(adj))
+			if deg := test.g.Deg(node); deg != len(adj) {
+				t.Errorf("Deg(%+v, %v): got %v, want %v", test.g, node, deg, len(adj))
 			}
-			if got := test.g.AdjToB(b); !matchA(got, adj) {
-				t.Errorf("AdjToB(%+v, %v): got %v, want %v", test.g, b, got, adj)
+			if got := test.g.AdjTo(node); !match(got, adj) {
+				t.Errorf("AdjTo(%+v, %v): got %v, want %v", test.g, node, got, adj)
 			}
 		}
 	}
@@ -103,8 +107,7 @@ func TestAdjacent(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	tests := []struct {
-		a          A
-		b          B
+		a, b       interface{}
 		degA, degB int
 		adj        bool // adjacent before Add
 	}{
@@ -125,10 +128,10 @@ func TestAdd(t *testing.T) {
 		if !g.Adjacent(test.a, test.b) {
 			t.Errorf("Add(%+v after %v, %v): not adjacent", g, test.a, test.b)
 		}
-		if degA := g.DegA(test.a); degA != test.degA {
+		if degA := g.Deg(test.a); degA != test.degA {
 			t.Errorf("Add(%+v after %v, %v): A degree %v, want %v", g, test.a, test.b, degA, test.degA)
 		}
-		if degB := g.DegB(test.b); degB != test.degB {
+		if degB := g.Deg(test.b); degB != test.degB {
 			t.Errorf("Add(%+v after %v, %v): B degree %v, want %v", g, test.a, test.b, degB, test.degB)
 		}
 	}
@@ -136,21 +139,20 @@ func TestAdd(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		m: map[interface{}]map[interface{}]struct{}{
+			"X": map[interface{}]struct{}{0: struct{}{}},
+			"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
+			"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
+			1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+			2:   map[interface{}]struct{}{"Z": struct{}{}},
+			3:   map[interface{}]struct{}{"Z": struct{}{}},
 		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
-		},
+		as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
+		bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 	}
 	tests := []struct {
-		a          A
-		b          B
+		a, b       interface{}
 		degA, degB int
 		adj        bool // adjacent before Delete
 	}{
@@ -174,10 +176,10 @@ func TestDelete(t *testing.T) {
 		if g.Adjacent(test.a, test.b) {
 			t.Errorf("Delete(%+v after %v, %v): adjacent", g, test.a, test.b)
 		}
-		if degA := g.DegA(test.a); degA != test.degA {
+		if degA := g.Deg(test.a); degA != test.degA {
 			t.Errorf("Delete(%+v after %v, %v): got %v degree %v, want %v", g, test.a, test.b, test.a, degA, test.degA)
 		}
-		if degB := g.DegB(test.b); degB != test.degB {
+		if degB := g.Deg(test.b); degB != test.degB {
 			t.Errorf("Delete(%+v after %v, %v): got %v degree %v, want %v", g, test.a, test.b, test.b, degB, test.degB)
 		}
 	}
@@ -185,121 +187,121 @@ func TestDelete(t *testing.T) {
 
 func TestRemoveA(t *testing.T) {
 	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		m: map[interface{}]map[interface{}]struct{}{
+			"X": map[interface{}]struct{}{0: struct{}{}},
+			"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
+			"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
+			1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+			2:   map[interface{}]struct{}{"Z": struct{}{}},
+			3:   map[interface{}]struct{}{"Z": struct{}{}},
 		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
-		},
+		as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
+		bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 	}
 	for _, test := range []struct {
-		a    A
+		node interface{}
 		want *Graph
 	}{
 		{
 			"X",
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-					"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				m: map[interface{}]map[interface{}]struct{}{
+					"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
+					"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+					0:   map[interface{}]struct{}{"Y": struct{}{}},
+					1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+					2:   map[interface{}]struct{}{"Z": struct{}{}},
+					3:   map[interface{}]struct{}{"Z": struct{}{}},
 				},
-				ba: map[B]map[A]struct{}{
-					0: map[A]struct{}{"Y": struct{}{}},
-					1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
-				},
+				as: map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+				bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 			},
 		},
 		{
 			"Y",
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				m: map[interface{}]map[interface{}]struct{}{
+					"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+					1:   map[interface{}]struct{}{"Z": struct{}{}},
+					2:   map[interface{}]struct{}{"Z": struct{}{}},
+					3:   map[interface{}]struct{}{"Z": struct{}{}},
 				},
-				ba: map[B]map[A]struct{}{
-					1: map[A]struct{}{"Z": struct{}{}},
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
-				},
+				as: map[interface{}]struct{}{"Z": struct{}{}},
+				bs: map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 			},
 		},
 		{
 			"Z", New(),
 		},
 	} {
-		if g.RemoveA(test.a); !reflect.DeepEqual(g, test.want) {
-			t.Errorf("RemoveA(after %v): got %+v, want %+v", test.a, g, test.want)
+		if g.Remove(test.node); !reflect.DeepEqual(g, test.want) {
+			t.Errorf("Remove(after %v): got %+v, want %+v", test.node, g, test.want)
 		}
 	}
 }
 
 func TestRemoveB(t *testing.T) {
 	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		m: map[interface{}]map[interface{}]struct{}{
+			"X": map[interface{}]struct{}{0: struct{}{}},
+			"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
+			"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
+			1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+			2:   map[interface{}]struct{}{"Z": struct{}{}},
+			3:   map[interface{}]struct{}{"Z": struct{}{}},
 		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
-		},
+		as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
+		bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 	}
 	for _, test := range []struct {
-		b    B
+		node interface{}
 		want *Graph
 	}{
 		{
 			0,
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Y": map[B]struct{}{1: struct{}{}},
-					"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				m: map[interface{}]map[interface{}]struct{}{
+					"Y": map[interface{}]struct{}{1: struct{}{}},
+					"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+					1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+					2:   map[interface{}]struct{}{"Z": struct{}{}},
+					3:   map[interface{}]struct{}{"Z": struct{}{}},
 				},
-				ba: map[B]map[A]struct{}{
-					1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
-				},
+				as: map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+				bs: map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 			},
 		},
 		{
 			1,
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Z": map[B]struct{}{2: struct{}{}, 3: struct{}{}},
+				m: map[interface{}]map[interface{}]struct{}{
+					"Z": map[interface{}]struct{}{2: struct{}{}, 3: struct{}{}},
+					2:   map[interface{}]struct{}{"Z": struct{}{}},
+					3:   map[interface{}]struct{}{"Z": struct{}{}},
 				},
-				ba: map[B]map[A]struct{}{
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
-				},
+				as: map[interface{}]struct{}{"Z": struct{}{}},
+				bs: map[interface{}]struct{}{2: struct{}{}, 3: struct{}{}},
 			},
 		},
 		{
 			2,
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Z": map[B]struct{}{3: struct{}{}},
+				m: map[interface{}]map[interface{}]struct{}{
+					"Z": map[interface{}]struct{}{3: struct{}{}},
+					3:   map[interface{}]struct{}{"Z": struct{}{}},
 				},
-				ba: map[B]map[A]struct{}{
-					3: map[A]struct{}{"Z": struct{}{}},
-				},
+				as: map[interface{}]struct{}{"Z": struct{}{}},
+				bs: map[interface{}]struct{}{3: struct{}{}},
 			},
 		},
 		{
 			3, New(),
 		},
 	} {
-		if g.RemoveB(test.b); !reflect.DeepEqual(g, test.want) {
-			t.Errorf("RemoveB(after %v): got %+v, want %+v", test.b, g, test.want)
+		if g.Remove(test.node); !reflect.DeepEqual(g, test.want) {
+			t.Errorf("Remove(after %v): got %+v, want %+v", test.node, g, test.want)
 		}
 	}
 }
@@ -307,17 +309,17 @@ func TestRemoveB(t *testing.T) {
 func TestCopy(t *testing.T) {
 	for _, g := range []*Graph{
 		&Graph{
-			ab: map[A]map[B]struct{}{
-				"X": map[B]struct{}{0: struct{}{}},
-				"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-				"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			m: map[interface{}]map[interface{}]struct{}{
+				"X": map[interface{}]struct{}{0: struct{}{}},
+				"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
+				"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
+				1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
+				2:   map[interface{}]struct{}{"Z": struct{}{}},
+				3:   map[interface{}]struct{}{"Z": struct{}{}},
 			},
-			ba: map[B]map[A]struct{}{
-				0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-				1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				2: map[A]struct{}{"Z": struct{}{}},
-				3: map[A]struct{}{"Z": struct{}{}},
-			},
+			as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
+			bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
 		},
 	} {
 		got := Copy(g)
@@ -327,12 +329,12 @@ func TestCopy(t *testing.T) {
 	}
 }
 
-// matchA reports whether s0 and s1 contain the same elements, up to ordering.
-func matchA(s0, s1 []A) bool {
+// match reports whether s0 and s1 contain the same elements, up to ordering.
+func match(s0, s1 []interface{}) bool {
 	if len(s0) != len(s1) {
 		return false
 	}
-	c := append(make([]A, 0, len(s1)), s1...)
+	c := append(make([]interface{}, 0, len(s1)), s1...)
 L:
 	for _, a := range s0 {
 		for i := range c {
@@ -346,59 +348,21 @@ L:
 	return true
 }
 
-// matchB reports whether s0 and s1 contain the same elements, up to ordering.
-func matchB(s0, s1 []B) bool {
-	if len(s0) != len(s1) {
-		return false
-	}
-	c := append(make([]B, 0, len(s1)), s1...)
-L:
-	for _, b := range s0 {
-		for i := range c {
-			if c[i] == b {
-				c[i], c = c[len(c)-1], c[:len(c)-1]
-				continue L
-			}
-		}
-		return false
-	}
-	return true
-}
-
-func TestMatchA(t *testing.T) {
+func TestMatch(t *testing.T) {
 	for _, test := range []struct {
-		s0, s1 []A
+		s0, s1 []interface{}
 		want   bool
 	}{
-		{[]A{}, []A{}, true},
-		{[]A{"A"}, []A{"A"}, true},
-		{[]A{"A", "B", "C"}, []A{"A", "B", "C"}, true},
-		{[]A{"A", "B", "C"}, []A{"B", "C", "A"}, true},
-		{[]A{"A", "B", "C"}, []A{"A", "B", "C", "C"}, false},
-		{[]A{"A", "B", "B", "C"}, []A{"A", "B", "C", "C"}, false},
-		{[]A{"A", "A", "B", "C"}, []A{"A", "B", "A", "C"}, true},
+		{[]interface{}{}, []interface{}{}, true},
+		{[]interface{}{"A"}, []interface{}{"A"}, true},
+		{[]interface{}{"A", "B", "C"}, []interface{}{"A", "B", "C"}, true},
+		{[]interface{}{"A", "B", "C"}, []interface{}{"B", "C", "A"}, true},
+		{[]interface{}{"A", "B", "C"}, []interface{}{"A", "B", "C", "C"}, false},
+		{[]interface{}{"A", "B", "B", "C"}, []interface{}{"A", "B", "C", "C"}, false},
+		{[]interface{}{"A", "A", "B", "C"}, []interface{}{"A", "B", "A", "C"}, true},
 	} {
-		if got := matchA(test.s0, test.s1); got != test.want {
-			t.Fatalf("matchA(%v, %v): got %v, want %v", test.s0, test.s1, got, test.want)
-		}
-	}
-}
-
-func TestMatchB(t *testing.T) {
-	for _, test := range []struct {
-		s0, s1 []B
-		want   bool
-	}{
-		{[]B{}, []B{}, true},
-		{[]B{"A"}, []B{"A"}, true},
-		{[]B{"A", "B", "C"}, []B{"A", "B", "C"}, true},
-		{[]B{"A", "B", "C"}, []B{"B", "C", "A"}, true},
-		{[]B{"A", "B", "C"}, []B{"A", "B", "C", "C"}, false},
-		{[]B{"A", "B", "B", "C"}, []B{"A", "B", "C", "C"}, false},
-		{[]B{"A", "A", "B", "C"}, []B{"A", "B", "A", "C"}, true},
-	} {
-		if got := matchB(test.s0, test.s1); got != test.want {
-			t.Fatalf("matchB(%v, %v): got %v, want %v", test.s0, test.s1, got, test.want)
+		if got := match(test.s0, test.s1); got != test.want {
+			t.Fatalf("match(%v, %v): got %v, want %v", test.s0, test.s1, got, test.want)
 		}
 	}
 }
@@ -478,7 +442,7 @@ func BenchmarkDelete(b *testing.B) {
 
 func BenchmarkRemoveA(b *testing.B) {
 	g := wordsGraph()
-	bs := g.AdjToA("require")
+	bs := g.AdjTo("require")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
@@ -486,13 +450,13 @@ func BenchmarkRemoveA(b *testing.B) {
 			g.Add("require", b)
 		}
 		b.StartTimer()
-		g.RemoveA("require")
+		g.Remove("require")
 	}
 }
 
 func BenchmarkRemoveB(b *testing.B) {
 	g := wordsGraph()
-	as := g.AdjToB("r")
+	as := g.AdjTo("r")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
@@ -500,7 +464,7 @@ func BenchmarkRemoveB(b *testing.B) {
 			g.Add(a, "r")
 		}
 		b.StartTimer()
-		g.RemoveB("r")
+		g.Remove("r")
 	}
 }
 
@@ -524,7 +488,7 @@ func BenchmarkAdjToA(b *testing.B) {
 	g := wordsGraph()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		g.AdjToA("require")
+		g.AdjTo("require")
 	}
 }
 
@@ -532,7 +496,7 @@ func BenchmarkAdjToB(b *testing.B) {
 	g := wordsGraph()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		g.AdjToB("r")
+		g.AdjTo("r")
 	}
 }
 
@@ -540,7 +504,7 @@ func BenchmarkDegA(b *testing.B) {
 	g := wordsGraph()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		g.DegA("require")
+		g.Deg("require")
 	}
 }
 
@@ -548,7 +512,7 @@ func BenchmarkDegB(b *testing.B) {
 	g := wordsGraph()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		g.DegB("r")
+		g.Deg("r")
 	}
 }
 
@@ -580,7 +544,7 @@ func BenchmarkConstructDestruct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		g := wordsGraph()
 		for b := 'a'; b <= 'z'; b++ {
-			g.RemoveB(string(b))
+			g.Remove(string(b))
 		}
 	}
 }
