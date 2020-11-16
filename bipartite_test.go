@@ -402,3 +402,185 @@ func TestMatchB(t *testing.T) {
 		}
 	}
 }
+
+// wordsGraph returns a Graph of the 100 most common English verbs and the letters they contain.
+func wordsGraph() *Graph {
+	var dict = []string{
+		"be", "have", "do", "say", "go", "get", "make", "know", "think", "take",
+		"see", "come", "want", "look", "use", "find", "give", "tell", "work", "call",
+		"try", "ask", "need", "feel", "become", "leave", "put", "mean", "keep", "let",
+		"begin", "seem", "help", "talk", "turn", "start", "show", "hear", "play", "run",
+		"move", "like", "live", "believe", "hold", "bring", "happen", "write", "provide", "sit",
+		"stand", "lose", "pay", "meet", "include", "continue", "set", "learn", "change", "lead",
+		"understand", "watch", "follow", "stop", "create", "speak", "read", "allow", "add", "spend",
+		"grow", "open", "walk", "win", "offer", "remember", "love", "consider", "appear", "buy",
+		"wait", "serve", "die", "send", "expect", "build", "stay", "fall", "cut", "reach",
+		"kill", "remain", "suggest", "raise", "pass", "sell", "require", "report", "decide", "pull",
+	}
+	g := New()
+	for _, s := range dict {
+		for _, b := range s {
+			g.Add(s, string(b))
+		}
+	}
+	return g
+}
+
+func BenchmarkNew(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		New()
+	}
+}
+
+func BenchmarkAdjacent(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.Adjacent("require", "r")
+	}
+}
+
+func BenchmarkAdd(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for _, benchmark := range []struct{ name, a, b string }{
+		{"create nodes", "test", "benchmark"},
+		{"extant nodes", "require", "r"},
+	} {
+		b.Run(benchmark.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				b.StopTimer()
+				g.Delete(benchmark.a, benchmark.b)
+				b.StartTimer()
+				g.Add(benchmark.a, benchmark.b)
+			}
+		})
+	}
+}
+
+func BenchmarkDelete(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for _, benchmark := range []struct{ name, a, b string }{
+		{"retain nodes", "require", "r"},
+		{"delete nodes", "test", "benchmark"},
+	} {
+		b.Run(benchmark.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				b.StopTimer()
+				g.Add(benchmark.a, benchmark.b)
+				b.StartTimer()
+				g.Delete(benchmark.a, benchmark.b)
+			}
+		})
+	}
+}
+
+func BenchmarkRemoveA(b *testing.B) {
+	g := wordsGraph()
+	bs := g.AdjToA("require")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for _, b := range bs {
+			g.Add("require", b)
+		}
+		b.StartTimer()
+		g.RemoveA("require")
+	}
+}
+
+func BenchmarkRemoveB(b *testing.B) {
+	g := wordsGraph()
+	as := g.AdjToB("r")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for _, a := range as {
+			g.Add(a, "r")
+		}
+		b.StartTimer()
+		g.RemoveB("r")
+	}
+}
+
+func BenchmarkAs(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.As()
+	}
+}
+
+func BenchmarkBs(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.Bs()
+	}
+}
+
+func BenchmarkAdjToA(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.AdjToA("require")
+	}
+}
+
+func BenchmarkAdjToB(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.AdjToB("r")
+	}
+}
+
+func BenchmarkDegA(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.DegA("require")
+	}
+}
+
+func BenchmarkDegB(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.DegB("r")
+	}
+}
+
+func BenchmarkNA(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.NA()
+	}
+}
+
+func BenchmarkNB(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.NB()
+	}
+}
+
+func BenchmarkCopy(b *testing.B) {
+	g := wordsGraph()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Copy(g)
+	}
+}
+
+func BenchmarkConstructDestruct(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		g := wordsGraph()
+		for b := 'a'; b <= 'z'; b++ {
+			g.RemoveB(string(b))
+		}
+	}
+}
