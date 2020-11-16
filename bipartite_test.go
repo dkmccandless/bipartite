@@ -16,12 +16,12 @@ var adjTests = []struct {
 	},
 	{
 		g: &Graph{
-			m: map[interface{}]map[interface{}]struct{}{
-				"apple": map[interface{}]struct{}{"tree": struct{}{}},
-				"tree":  map[interface{}]struct{}{"apple": struct{}{}},
+			m: map[interface{}]map[interface{}]bool{
+				"apple": map[interface{}]bool{"tree": true},
+				"tree":  map[interface{}]bool{"apple": true},
 			},
-			as: map[interface{}]struct{}{"apple": struct{}{}},
-			bs: map[interface{}]struct{}{"tree": struct{}{}},
+			as: map[interface{}]bool{"apple": true},
+			bs: map[interface{}]bool{"tree": true},
 		},
 		adj: map[interface{}]map[interface{}]bool{
 			"apple":     map[interface{}]bool{"tree": true, "rock": false},
@@ -32,17 +32,17 @@ var adjTests = []struct {
 	},
 	{
 		g: &Graph{
-			m: map[interface{}]map[interface{}]struct{}{
-				"X": map[interface{}]struct{}{0: struct{}{}},
-				"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
-				"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-				0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
-				1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				2:   map[interface{}]struct{}{"Z": struct{}{}},
-				3:   map[interface{}]struct{}{"Z": struct{}{}},
+			m: map[interface{}]map[interface{}]bool{
+				"X": map[interface{}]bool{0: true},
+				"Y": map[interface{}]bool{0: true, 1: true},
+				"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+				0:   map[interface{}]bool{"X": true, "Y": true},
+				1:   map[interface{}]bool{"Y": true, "Z": true},
+				2:   map[interface{}]bool{"Z": true},
+				3:   map[interface{}]bool{"Z": true},
 			},
-			as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
-			bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			as: map[interface{}]bool{"X": true, "Y": true, "Z": true},
+			bs: map[interface{}]bool{0: true, 1: true, 2: true, 3: true},
 		},
 		adj: map[interface{}]map[interface{}]bool{
 			"W": map[interface{}]bool{0: false, 1: false, 2: false, 3: false},
@@ -139,17 +139,17 @@ func TestAdd(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	g := &Graph{
-		m: map[interface{}]map[interface{}]struct{}{
-			"X": map[interface{}]struct{}{0: struct{}{}},
-			"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-			0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2:   map[interface{}]struct{}{"Z": struct{}{}},
-			3:   map[interface{}]struct{}{"Z": struct{}{}},
+		m: map[interface{}]map[interface{}]bool{
+			"X": map[interface{}]bool{0: true},
+			"Y": map[interface{}]bool{0: true, 1: true},
+			"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+			0:   map[interface{}]bool{"X": true, "Y": true},
+			1:   map[interface{}]bool{"Y": true, "Z": true},
+			2:   map[interface{}]bool{"Z": true},
+			3:   map[interface{}]bool{"Z": true},
 		},
-		as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
-		bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		as: map[interface{}]bool{"X": true, "Y": true, "Z": true},
+		bs: map[interface{}]bool{0: true, 1: true, 2: true, 3: true},
 	}
 	tests := []struct {
 		a, b       interface{}
@@ -187,17 +187,17 @@ func TestDelete(t *testing.T) {
 
 func TestRemoveA(t *testing.T) {
 	g := &Graph{
-		m: map[interface{}]map[interface{}]struct{}{
-			"X": map[interface{}]struct{}{0: struct{}{}},
-			"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-			0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2:   map[interface{}]struct{}{"Z": struct{}{}},
-			3:   map[interface{}]struct{}{"Z": struct{}{}},
+		m: map[interface{}]map[interface{}]bool{
+			"X": map[interface{}]bool{0: true},
+			"Y": map[interface{}]bool{0: true, 1: true},
+			"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+			0:   map[interface{}]bool{"X": true, "Y": true},
+			1:   map[interface{}]bool{"Y": true, "Z": true},
+			2:   map[interface{}]bool{"Z": true},
+			3:   map[interface{}]bool{"Z": true},
 		},
-		as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
-		bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		as: map[interface{}]bool{"X": true, "Y": true, "Z": true},
+		bs: map[interface{}]bool{0: true, 1: true, 2: true, 3: true},
 	}
 	for _, test := range []struct {
 		node interface{}
@@ -206,29 +206,29 @@ func TestRemoveA(t *testing.T) {
 		{
 			"X",
 			&Graph{
-				m: map[interface{}]map[interface{}]struct{}{
-					"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
-					"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-					0:   map[interface{}]struct{}{"Y": struct{}{}},
-					1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-					2:   map[interface{}]struct{}{"Z": struct{}{}},
-					3:   map[interface{}]struct{}{"Z": struct{}{}},
+				m: map[interface{}]map[interface{}]bool{
+					"Y": map[interface{}]bool{0: true, 1: true},
+					"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+					0:   map[interface{}]bool{"Y": true},
+					1:   map[interface{}]bool{"Y": true, "Z": true},
+					2:   map[interface{}]bool{"Z": true},
+					3:   map[interface{}]bool{"Z": true},
 				},
-				as: map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				as: map[interface{}]bool{"Y": true, "Z": true},
+				bs: map[interface{}]bool{0: true, 1: true, 2: true, 3: true},
 			},
 		},
 		{
 			"Y",
 			&Graph{
-				m: map[interface{}]map[interface{}]struct{}{
-					"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-					1:   map[interface{}]struct{}{"Z": struct{}{}},
-					2:   map[interface{}]struct{}{"Z": struct{}{}},
-					3:   map[interface{}]struct{}{"Z": struct{}{}},
+				m: map[interface{}]map[interface{}]bool{
+					"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+					1:   map[interface{}]bool{"Z": true},
+					2:   map[interface{}]bool{"Z": true},
+					3:   map[interface{}]bool{"Z": true},
 				},
-				as: map[interface{}]struct{}{"Z": struct{}{}},
-				bs: map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				as: map[interface{}]bool{"Z": true},
+				bs: map[interface{}]bool{1: true, 2: true, 3: true},
 			},
 		},
 		{
@@ -243,17 +243,17 @@ func TestRemoveA(t *testing.T) {
 
 func TestRemoveB(t *testing.T) {
 	g := &Graph{
-		m: map[interface{}]map[interface{}]struct{}{
-			"X": map[interface{}]struct{}{0: struct{}{}},
-			"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-			0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2:   map[interface{}]struct{}{"Z": struct{}{}},
-			3:   map[interface{}]struct{}{"Z": struct{}{}},
+		m: map[interface{}]map[interface{}]bool{
+			"X": map[interface{}]bool{0: true},
+			"Y": map[interface{}]bool{0: true, 1: true},
+			"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+			0:   map[interface{}]bool{"X": true, "Y": true},
+			1:   map[interface{}]bool{"Y": true, "Z": true},
+			2:   map[interface{}]bool{"Z": true},
+			3:   map[interface{}]bool{"Z": true},
 		},
-		as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
-		bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		as: map[interface{}]bool{"X": true, "Y": true, "Z": true},
+		bs: map[interface{}]bool{0: true, 1: true, 2: true, 3: true},
 	}
 	for _, test := range []struct {
 		node interface{}
@@ -262,38 +262,38 @@ func TestRemoveB(t *testing.T) {
 		{
 			0,
 			&Graph{
-				m: map[interface{}]map[interface{}]struct{}{
-					"Y": map[interface{}]struct{}{1: struct{}{}},
-					"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-					1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-					2:   map[interface{}]struct{}{"Z": struct{}{}},
-					3:   map[interface{}]struct{}{"Z": struct{}{}},
+				m: map[interface{}]map[interface{}]bool{
+					"Y": map[interface{}]bool{1: true},
+					"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+					1:   map[interface{}]bool{"Y": true, "Z": true},
+					2:   map[interface{}]bool{"Z": true},
+					3:   map[interface{}]bool{"Z": true},
 				},
-				as: map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				bs: map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				as: map[interface{}]bool{"Y": true, "Z": true},
+				bs: map[interface{}]bool{1: true, 2: true, 3: true},
 			},
 		},
 		{
 			1,
 			&Graph{
-				m: map[interface{}]map[interface{}]struct{}{
-					"Z": map[interface{}]struct{}{2: struct{}{}, 3: struct{}{}},
-					2:   map[interface{}]struct{}{"Z": struct{}{}},
-					3:   map[interface{}]struct{}{"Z": struct{}{}},
+				m: map[interface{}]map[interface{}]bool{
+					"Z": map[interface{}]bool{2: true, 3: true},
+					2:   map[interface{}]bool{"Z": true},
+					3:   map[interface{}]bool{"Z": true},
 				},
-				as: map[interface{}]struct{}{"Z": struct{}{}},
-				bs: map[interface{}]struct{}{2: struct{}{}, 3: struct{}{}},
+				as: map[interface{}]bool{"Z": true},
+				bs: map[interface{}]bool{2: true, 3: true},
 			},
 		},
 		{
 			2,
 			&Graph{
-				m: map[interface{}]map[interface{}]struct{}{
-					"Z": map[interface{}]struct{}{3: struct{}{}},
-					3:   map[interface{}]struct{}{"Z": struct{}{}},
+				m: map[interface{}]map[interface{}]bool{
+					"Z": map[interface{}]bool{3: true},
+					3:   map[interface{}]bool{"Z": true},
 				},
-				as: map[interface{}]struct{}{"Z": struct{}{}},
-				bs: map[interface{}]struct{}{3: struct{}{}},
+				as: map[interface{}]bool{"Z": true},
+				bs: map[interface{}]bool{3: true},
 			},
 		},
 		{
@@ -309,17 +309,17 @@ func TestRemoveB(t *testing.T) {
 func TestCopy(t *testing.T) {
 	for _, g := range []*Graph{
 		&Graph{
-			m: map[interface{}]map[interface{}]struct{}{
-				"X": map[interface{}]struct{}{0: struct{}{}},
-				"Y": map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}},
-				"Z": map[interface{}]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
-				0:   map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}},
-				1:   map[interface{}]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				2:   map[interface{}]struct{}{"Z": struct{}{}},
-				3:   map[interface{}]struct{}{"Z": struct{}{}},
+			m: map[interface{}]map[interface{}]bool{
+				"X": map[interface{}]bool{0: true},
+				"Y": map[interface{}]bool{0: true, 1: true},
+				"Z": map[interface{}]bool{1: true, 2: true, 3: true},
+				0:   map[interface{}]bool{"X": true, "Y": true},
+				1:   map[interface{}]bool{"Y": true, "Z": true},
+				2:   map[interface{}]bool{"Z": true},
+				3:   map[interface{}]bool{"Z": true},
 			},
-			as: map[interface{}]struct{}{"X": struct{}{}, "Y": struct{}{}, "Z": struct{}{}},
-			bs: map[interface{}]struct{}{0: struct{}{}, 1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			as: map[interface{}]bool{"X": true, "Y": true, "Z": true},
+			bs: map[interface{}]bool{0: true, 1: true, 2: true, 3: true},
 		},
 	} {
 		got := Copy(g)

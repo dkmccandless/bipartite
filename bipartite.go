@@ -10,16 +10,16 @@ package bipartite
 
 // Graph is an undirected bipartite graph.
 type Graph struct {
-	m      map[interface{}]map[interface{}]struct{}
-	as, bs map[interface{}]struct{}
+	m      map[interface{}]map[interface{}]bool
+	as, bs map[interface{}]bool
 }
 
 // New returns an empty Graph ready to use.
 func New() *Graph {
 	return &Graph{
-		m:  make(map[interface{}]map[interface{}]struct{}),
-		as: make(map[interface{}]struct{}),
-		bs: make(map[interface{}]struct{}),
+		m:  make(map[interface{}]map[interface{}]bool),
+		as: make(map[interface{}]bool),
+		bs: make(map[interface{}]bool),
 	}
 }
 
@@ -27,16 +27,16 @@ func New() *Graph {
 func Copy(g *Graph) *Graph {
 	c := New()
 	for k0 := range g.m {
-		c.m[k0] = make(map[interface{}]struct{})
+		c.m[k0] = make(map[interface{}]bool)
 		for k1 := range g.m[k0] {
-			c.m[k0][k1] = struct{}{}
+			c.m[k0][k1] = true
 		}
 	}
 	for k := range g.as {
-		c.as[k] = struct{}{}
+		c.as[k] = true
 	}
 	for k := range g.bs {
-		c.bs[k] = struct{}{}
+		c.bs[k] = true
 	}
 	return c
 }
@@ -44,16 +44,16 @@ func Copy(g *Graph) *Graph {
 // Add adds a and b to the graph if not present, and records that they are adjacent.
 func (g *Graph) Add(a, b interface{}) {
 	if _, ok := g.as[a]; !ok {
-		g.as[a] = struct{}{}
-		g.m[a] = make(map[interface{}]struct{})
+		g.as[a] = true
+		g.m[a] = make(map[interface{}]bool)
 	}
 	if _, ok := g.bs[b]; !ok {
-		g.bs[b] = struct{}{}
-		g.m[b] = make(map[interface{}]struct{})
+		g.bs[b] = true
+		g.m[b] = make(map[interface{}]bool)
 	}
 
-	g.m[a][b] = struct{}{}
-	g.m[b][a] = struct{}{}
+	g.m[a][b] = true
+	g.m[b][a] = true
 }
 
 // Adjacent reports whether a and b are adjacent.
@@ -61,8 +61,7 @@ func (g *Graph) Adjacent(a, b interface{}) bool {
 	if _, ok := g.as[a]; !ok {
 		return false
 	}
-	_, ok := g.m[a][b]
-	return ok
+	return g.m[a][b]
 }
 
 // AdjTo returns an unordered slice of all nodes adjacent to node.
