@@ -16,8 +16,8 @@ var adjTests = []struct {
 	},
 	{
 		g: &Graph{
-			ab: map[A]map[B]struct{}{"apple": map[B]struct{}{"tree": struct{}{}}},
-			ba: map[B]map[A]struct{}{"tree": map[A]struct{}{"apple": struct{}{}}},
+			ab: map[A]map[B]bool{"apple": map[B]bool{"tree": true}},
+			ba: map[B]map[A]bool{"tree": map[A]bool{"apple": true}},
 		},
 		adj: map[A]map[B]bool{
 			"apple":     map[B]bool{"tree": true, "rock": false},
@@ -28,16 +28,16 @@ var adjTests = []struct {
 	},
 	{
 		g: &Graph{
-			ab: map[A]map[B]struct{}{
-				"X": map[B]struct{}{0: struct{}{}},
-				"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-				"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			ab: map[A]map[B]bool{
+				"X": map[B]bool{0: true},
+				"Y": map[B]bool{0: true, 1: true},
+				"Z": map[B]bool{1: true, 2: true, 3: true},
 			},
-			ba: map[B]map[A]struct{}{
-				0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-				1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				2: map[A]struct{}{"Z": struct{}{}},
-				3: map[A]struct{}{"Z": struct{}{}},
+			ba: map[B]map[A]bool{
+				0: map[A]bool{"X": true, "Y": true},
+				1: map[A]bool{"Y": true, "Z": true},
+				2: map[A]bool{"Z": true},
+				3: map[A]bool{"Z": true},
 			},
 		},
 		adj: map[A]map[B]bool{
@@ -136,16 +136,16 @@ func TestAdd(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		ab: map[A]map[B]bool{
+			"X": map[B]bool{0: true},
+			"Y": map[B]bool{0: true, 1: true},
+			"Z": map[B]bool{1: true, 2: true, 3: true},
 		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
+		ba: map[B]map[A]bool{
+			0: map[A]bool{"X": true, "Y": true},
+			1: map[A]bool{"Y": true, "Z": true},
+			2: map[A]bool{"Z": true},
+			3: map[A]bool{"Z": true},
 		},
 	}
 	tests := []struct {
@@ -185,16 +185,16 @@ func TestDelete(t *testing.T) {
 
 func TestRemoveA(t *testing.T) {
 	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		ab: map[A]map[B]bool{
+			"X": map[B]bool{0: true},
+			"Y": map[B]bool{0: true, 1: true},
+			"Z": map[B]bool{1: true, 2: true, 3: true},
 		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
+		ba: map[B]map[A]bool{
+			0: map[A]bool{"X": true, "Y": true},
+			1: map[A]bool{"Y": true, "Z": true},
+			2: map[A]bool{"Z": true},
+			3: map[A]bool{"Z": true},
 		},
 	}
 	for _, test := range []struct {
@@ -204,28 +204,28 @@ func TestRemoveA(t *testing.T) {
 		{
 			"X",
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-					"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				ab: map[A]map[B]bool{
+					"Y": map[B]bool{0: true, 1: true},
+					"Z": map[B]bool{1: true, 2: true, 3: true},
 				},
-				ba: map[B]map[A]struct{}{
-					0: map[A]struct{}{"Y": struct{}{}},
-					1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
+				ba: map[B]map[A]bool{
+					0: map[A]bool{"Y": true},
+					1: map[A]bool{"Y": true, "Z": true},
+					2: map[A]bool{"Z": true},
+					3: map[A]bool{"Z": true},
 				},
 			},
 		},
 		{
 			"Y",
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				ab: map[A]map[B]bool{
+					"Z": map[B]bool{1: true, 2: true, 3: true},
 				},
-				ba: map[B]map[A]struct{}{
-					1: map[A]struct{}{"Z": struct{}{}},
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
+				ba: map[B]map[A]bool{
+					1: map[A]bool{"Z": true},
+					2: map[A]bool{"Z": true},
+					3: map[A]bool{"Z": true},
 				},
 			},
 		},
@@ -241,16 +241,16 @@ func TestRemoveA(t *testing.T) {
 
 func TestRemoveB(t *testing.T) {
 	g := &Graph{
-		ab: map[A]map[B]struct{}{
-			"X": map[B]struct{}{0: struct{}{}},
-			"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-			"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+		ab: map[A]map[B]bool{
+			"X": map[B]bool{0: true},
+			"Y": map[B]bool{0: true, 1: true},
+			"Z": map[B]bool{1: true, 2: true, 3: true},
 		},
-		ba: map[B]map[A]struct{}{
-			0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-			1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-			2: map[A]struct{}{"Z": struct{}{}},
-			3: map[A]struct{}{"Z": struct{}{}},
+		ba: map[B]map[A]bool{
+			0: map[A]bool{"X": true, "Y": true},
+			1: map[A]bool{"Y": true, "Z": true},
+			2: map[A]bool{"Z": true},
+			3: map[A]bool{"Z": true},
 		},
 	}
 	for _, test := range []struct {
@@ -260,37 +260,37 @@ func TestRemoveB(t *testing.T) {
 		{
 			0,
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Y": map[B]struct{}{1: struct{}{}},
-					"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+				ab: map[A]map[B]bool{
+					"Y": map[B]bool{1: true},
+					"Z": map[B]bool{1: true, 2: true, 3: true},
 				},
-				ba: map[B]map[A]struct{}{
-					1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
+				ba: map[B]map[A]bool{
+					1: map[A]bool{"Y": true, "Z": true},
+					2: map[A]bool{"Z": true},
+					3: map[A]bool{"Z": true},
 				},
 			},
 		},
 		{
 			1,
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Z": map[B]struct{}{2: struct{}{}, 3: struct{}{}},
+				ab: map[A]map[B]bool{
+					"Z": map[B]bool{2: true, 3: true},
 				},
-				ba: map[B]map[A]struct{}{
-					2: map[A]struct{}{"Z": struct{}{}},
-					3: map[A]struct{}{"Z": struct{}{}},
+				ba: map[B]map[A]bool{
+					2: map[A]bool{"Z": true},
+					3: map[A]bool{"Z": true},
 				},
 			},
 		},
 		{
 			2,
 			&Graph{
-				ab: map[A]map[B]struct{}{
-					"Z": map[B]struct{}{3: struct{}{}},
+				ab: map[A]map[B]bool{
+					"Z": map[B]bool{3: true},
 				},
-				ba: map[B]map[A]struct{}{
-					3: map[A]struct{}{"Z": struct{}{}},
+				ba: map[B]map[A]bool{
+					3: map[A]bool{"Z": true},
 				},
 			},
 		},
@@ -307,16 +307,16 @@ func TestRemoveB(t *testing.T) {
 func TestCopy(t *testing.T) {
 	for _, g := range []*Graph{
 		&Graph{
-			ab: map[A]map[B]struct{}{
-				"X": map[B]struct{}{0: struct{}{}},
-				"Y": map[B]struct{}{0: struct{}{}, 1: struct{}{}},
-				"Z": map[B]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}},
+			ab: map[A]map[B]bool{
+				"X": map[B]bool{0: true},
+				"Y": map[B]bool{0: true, 1: true},
+				"Z": map[B]bool{1: true, 2: true, 3: true},
 			},
-			ba: map[B]map[A]struct{}{
-				0: map[A]struct{}{"X": struct{}{}, "Y": struct{}{}},
-				1: map[A]struct{}{"Y": struct{}{}, "Z": struct{}{}},
-				2: map[A]struct{}{"Z": struct{}{}},
-				3: map[A]struct{}{"Z": struct{}{}},
+			ba: map[B]map[A]bool{
+				0: map[A]bool{"X": true, "Y": true},
+				1: map[A]bool{"Y": true, "Z": true},
+				2: map[A]bool{"Z": true},
+				3: map[A]bool{"Z": true},
 			},
 		},
 	} {
